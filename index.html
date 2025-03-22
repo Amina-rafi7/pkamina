@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Data Analysis Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            text-align: center;
+        }
+        #dataInput {
+            width: 80%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .canvas-container {
+            width: 600px;
+            height: 400px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Statistical Data Analysis Tool</h1>
+        <label for="dataInput">Enter Data (comma-separated, two lines for covariance & scatter plot):</label><br>
+        <textarea id="dataInput"></textarea><br>
+        <button onclick="analyzeData()">Analyze Data</button>
+        
+        <div id="results">
+            <h2>Results</h2>
+            <p>Mean: <span id="mean"></span></p>
+            <p>Median: <span id="median"></span></p>
+            <p>Mode: <span id="mode"></span></p>
+            <p>Min: <span id="min"></span> | Max: <span id="max"></span> | Range: <span id="range"></span></p>
+            <p>Standard Deviation: <span id="stdDev"></span></p>
+            <p>Variance: <span id="variance"></span></p>
+            <p>Covariance: <span id="covariance"></span></p>
+            <p>Pearson Correlation: <span id="correlation"></span></p>
+            <p>RMS: <span id="rms"></span></p>
+            <p>Geometric Mean: <span id="geometricMean"></span></p>
+            <p>Harmonic Mean: <span id="harmonicMean"></span></p>
+        </div>
+        
+        <h2>Visualizations</h2>
+        <div class="canvas-container">
+            <canvas id="histogramChart"></canvas>
+        </div>
+        <div class="canvas-container">
+            <canvas id="boxPlotChart"></canvas>
+        </div>
+        <div class="canvas-container">
+            <canvas id="scatterPlotChart"></canvas>
+        </div>
+    </div>
+    
+    <script>
+        function analyzeData() {
+            let inputData = document.getElementById("dataInput").value;
+            let data = parseData(inputData);
+            let data2 = [];
+            if (inputData.includes("\n")) {
+                let lines = inputData.split("\n");
+                if (lines.length >= 2) {
+                    data = lines[0].split(",").map(Number);
+                    data2 = lines[1].split(",").map(Number);
+                    if (data.length !== data2.length) {
+                        alert("Two variable data must have equal lengths");
+                        return;
+                    }
+                }
+            }
+            document.getElementById("mean").textContent = calculateMean(data).toFixed(2);
+            document.getElementById("median").textContent = calculateMedian(data).toFixed(2);
+            document.getElementById("mode").textContent = calculateMode(data).join(", ");
+            document.getElementById("min").textContent = Math.min(...data);
+            document.getElementById("max").textContent = Math.max(...data);
+            document.getElementById("range").textContent = (Math.max(...data) - Math.min(...data)).toFixed(2);
+            document.getElementById("stdDev").textContent = calculateStandardDeviation(data).toFixed(2);
+            document.getElementById("variance").textContent = calculateVariance(data).toFixed(2);
+            document.getElementById("covariance").textContent = data2.length ? calculateCovariance(data, data2).toFixed(2) : "N/A";
+            document.getElementById("correlation").textContent = data2.length ? calculatePearsonCorrelation(data, data2).toFixed(2) : "N/A";
+            document.getElementById("rms").textContent = calculateRMS(data).toFixed(2);
+            document.getElementById("geometricMean").textContent = calculateGeometricMean(data).toFixed(2);
+            document.getElementById("harmonicMean").textContent = calculateHarmonicMean(data).toFixed(2);
+            createHistogram(data, "histogramChart");
+            createBoxPlot(data, "boxPlotChart");
+            if (data2.length) createScatterPlot(data, data2, "scatterPlotChart");
+        }
+        
+        function calculatePearsonCorrelation(x, y) {
+            let meanX = calculateMean(x), meanY = calculateMean(y);
+            let numerator = x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0);
+            let denominator = Math.sqrt(x.reduce((sum, xi) => sum + (xi - meanX) ** 2, 0) * y.reduce((sum, yi) => sum + (yi - meanY) ** 2, 0));
+            return numerator / denominator;
+        }
+        
+        function createScatterPlot(x, y, canvasId) {
+            let ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: [{ label: 'Scatter Plot', data: x.map((xi, i) => ({ x: xi, y: y[i] })), backgroundColor: 'red' }] },
+                options: { scales: { x: { beginAtZero: false }, y: { beginAtZero: false } } }
+            });
+        }
+    </script>
+</body>
+</html>
