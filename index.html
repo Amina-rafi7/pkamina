@@ -61,17 +61,11 @@
             <p>Variance: <span id="variance"></span></p>
             <p>Covariance: <span id="covariance"></span></p>
             <p>Pearson Correlation: <span id="correlation"></span></p>
-            <p>RMS: <span id="rms"></span></p>
-            <p>Geometric Mean: <span id="geometricMean"></span></p>
-            <p>Harmonic Mean: <span id="harmonicMean"></span></p>
         </div>
         
         <h2>Visualizations</h2>
         <div class="canvas-container">
             <canvas id="histogramChart"></canvas>
-        </div>
-        <div class="canvas-container">
-            <canvas id="boxPlotChart"></canvas>
         </div>
         <div class="canvas-container">
             <canvas id="scatterPlotChart"></canvas>
@@ -80,20 +74,17 @@
     
     <script>
         function analyzeData() {
-            let inputData = document.getElementById("dataInput").value;
-            let data = parseData(inputData);
-            let data2 = [];
-            if (inputData.includes("\n")) {
-                let lines = inputData.split("\n");
-                if (lines.length >= 2) {
-                    data = lines[0].split(",").map(Number);
-                    data2 = lines[1].split(",").map(Number);
-                    if (data.length !== data2.length) {
-                        alert("Two variable data must have equal lengths");
-                        return;
-                    }
-                }
+            let inputData = document.getElementById("dataInput").value.trim();
+            let lines = inputData.split("\n").map(line => line.split(",").map(Number));
+            
+            if (lines.length < 1 || lines[0].some(isNaN)) {
+                alert("Invalid data. Please enter comma-separated numbers.");
+                return;
             }
+
+            let data = lines[0];
+            let data2 = lines.length > 1 && lines[1].length === data.length ? lines[1] : [];
+
             document.getElementById("mean").textContent = calculateMean(data).toFixed(2);
             document.getElementById("median").textContent = calculateMedian(data).toFixed(2);
             document.getElementById("mode").textContent = calculateMode(data).join(", ");
@@ -104,21 +95,65 @@
             document.getElementById("variance").textContent = calculateVariance(data).toFixed(2);
             document.getElementById("covariance").textContent = data2.length ? calculateCovariance(data, data2).toFixed(2) : "N/A";
             document.getElementById("correlation").textContent = data2.length ? calculatePearsonCorrelation(data, data2).toFixed(2) : "N/A";
-            document.getElementById("rms").textContent = calculateRMS(data).toFixed(2);
-            document.getElementById("geometricMean").textContent = calculateGeometricMean(data).toFixed(2);
-            document.getElementById("harmonicMean").textContent = calculateHarmonicMean(data).toFixed(2);
+
             createHistogram(data, "histogramChart");
-            createBoxPlot(data, "boxPlotChart");
             if (data2.length) createScatterPlot(data, data2, "scatterPlotChart");
         }
-        
-        function calculatePearsonCorrelation(x, y) {
-            let meanX = calculateMean(x), meanY = calculateMean(y);
-            let numerator = x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0);
-            let denominator = Math.sqrt(x.reduce((sum, xi) => sum + (xi - meanX) ** 2, 0) * y.reduce((sum, yi) => sum + (yi - meanY) ** 2, 0));
-            return numerator / denominator;
+
+        function calculateMean(data) {
+            return data.reduce((sum, val) => sum + val, 0) / data.length;
         }
-        
+
+        function calculateMedian(data) {
+            let sorted = [...data].sort((a, b) => a - b);
+            let mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        }
+
+        function calculateMode(data) {
+            let freq = {};
+            data.forEach(num => freq[num] = (freq[num] || 0) + 1);
+            let maxFreq = Math.max(...Object.values(freq));
+            return Object.keys(freq).filter(num => freq[num] === maxFreq).map(Number);
+        }
+
+        function calculateStandardDeviation(data) {
+            let mean = calculateMean(data);
+            return Math.sqrt(data.reduce((sum, val) => sum + (val - mean) ** 2, 0) / data.length);
+        }
+
+        function calculateVariance(data) {
+            return calculateStandardDeviation(data) ** 2;
+        }
+
+        function calculateCovariance(x, y) {
+            let meanX = calculateMean(x), meanY = calculateMean(y);
+            return x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0) / x.length;
+        }
+
+        function calculatePearsonCorrelation(x, y) {
+            let cov = calculateCovariance(x, y);
+            return cov / (calculateStandardDeviation(x) * calculateStandardDeviation(y));
+        }
+
+        function createHistogram(data, canvasId) {
+            let ctx = document.getElementById(canvasId).getContext("2d");
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: [...new Set(data)].sort((a, b) => a - b),
+                    datasets: [{
+                        label: "Histogram",
+                        data: Object.values(data.reduce((freq, num) => (freq[num] = (freq[num] || 0) + 1, freq), {})),
+                        backgroundColor: "rgba(75, 192, 192, 0.6)",
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
         function createScatterPlot(x, y, canvasId) {
             let ctx = document.getElementById(canvasId).getContext('2d');
             new Chart(ctx, {
