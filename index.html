@@ -138,7 +138,8 @@
 
         function createHistogram(data, canvasId) {
             let ctx = document.getElementById(canvasId).getContext("2d");
-            new Chart(ctx, {
+            if (window.myHistogram) window.myHistogram.destroy();
+            window.myHistogram = new Chart(ctx, {
                 type: "bar",
                 data: {
                     labels: [...new Set(data)].sort((a, b) => a - b),
@@ -156,7 +157,8 @@
 
         function createScatterPlot(x, y, canvasId) {
             let ctx = document.getElementById(canvasId).getContext('2d');
-            new Chart(ctx, {
+            if (window.myScatterPlot) window.myScatterPlot.destroy();
+            window.myScatterPlot = new Chart(ctx, {
                 type: 'scatter',
                 data: { datasets: [{ label: 'Scatter Plot', data: x.map((xi, i) => ({ x: xi, y: y[i] })), backgroundColor: 'red' }] },
                 options: { scales: { x: { beginAtZero: false }, y: { beginAtZero: false } } }
