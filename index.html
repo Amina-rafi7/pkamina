@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,38 +9,49 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background-color: #f4f4f9;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
             text-align: center;
-        }
-        #dataInput {
-            width: 80%;
-            height: 100px;
-            margin-bottom: 10px;
+            color: white;
         }
         .container {
             max-width: 900px;
             margin: auto;
             padding: 20px;
-            background: white;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
             border-radius: 10px;
         }
-        button {
-            background-color: #007bff;
-            color: white;
+        #dataInput {
+            width: 80%;
+            height: 100px;
+            margin-bottom: 10px;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             padding: 10px;
+        }
+        button {
+            background: linear-gradient(135deg, #ff8c00, #ff4500);
+            color: white;
+            padding: 10px 20px;
             border: none;
             cursor: pointer;
             margin: 10px;
             border-radius: 5px;
+            font-size: 16px;
+            transition: 0.3s ease-in-out;
         }
         button:hover {
-            background-color: #0056b3;
+            background: linear-gradient(135deg, #ff4500, #ff0000);
+            transform: scale(1.05);
         }
         .canvas-container {
             width: 600px;
             height: 400px;
             margin: auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -101,37 +111,27 @@
             if (data2.length) createScatterPlot(data, data2, "scatterPlotChart");
         }
 
-        function calculateMean(data) {
-            return data.reduce((sum, val) => sum + val, 0) / data.length;
-        }
-
+        function calculateMean(data) { return data.reduce((sum, val) => sum + val, 0) / data.length; }
         function calculateMedian(data) {
             let sorted = [...data].sort((a, b) => a - b);
             let mid = Math.floor(sorted.length / 2);
             return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
         }
-
         function calculateMode(data) {
             let freq = {};
             data.forEach(num => freq[num] = (freq[num] || 0) + 1);
             let maxFreq = Math.max(...Object.values(freq));
             return Object.keys(freq).filter(num => freq[num] === maxFreq).map(Number);
         }
-
         function calculateStandardDeviation(data) {
             let mean = calculateMean(data);
             return Math.sqrt(data.reduce((sum, val) => sum + (val - mean) ** 2, 0) / data.length);
         }
-
-        function calculateVariance(data) {
-            return calculateStandardDeviation(data) ** 2;
-        }
-
+        function calculateVariance(data) { return calculateStandardDeviation(data) ** 2; }
         function calculateCovariance(x, y) {
             let meanX = calculateMean(x), meanY = calculateMean(y);
             return x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0) / x.length;
         }
-
         function calculatePearsonCorrelation(x, y) {
             let cov = calculateCovariance(x, y);
             return cov / (calculateStandardDeviation(x) * calculateStandardDeviation(y));
@@ -140,6 +140,7 @@
         function createHistogram(data, canvasId) {
             let ctx = document.getElementById(canvasId).getContext("2d");
             if (window.myHistogram) window.myHistogram.destroy();
+            let colors = data.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
             window.myHistogram = new Chart(ctx, {
                 type: "bar",
                 data: {
@@ -147,8 +148,8 @@
                     datasets: [{
                         label: "Histogram",
                         data: Object.values(data.reduce((freq, num) => (freq[num] = (freq[num] || 0) + 1, freq), {})),
-                        backgroundColor: "rgba(75, 192, 192, 0.6)",
-                        borderColor: "rgba(75, 192, 192, 1)",
+                        backgroundColor: colors,
+                        borderColor: "#ffffff",
                         borderWidth: 1
                     }]
                 },
@@ -161,10 +162,10 @@
             if (window.myScatterPlot) window.myScatterPlot.destroy();
             window.myScatterPlot = new Chart(ctx, {
                 type: 'scatter',
-                data: { datasets: [{ label: 'Scatter Plot', data: x.map((xi, i) => ({ x: xi, y: y[i] })), backgroundColor: 'red' }] },
+                data: { datasets: [{ label: 'Scatter Plot', data: x.map((xi, i) => ({ x: xi, y: y[i] })), backgroundColor: 'blue' }] },
                 options: { scales: { x: { beginAtZero: false }, y: { beginAtZero: false } } }
             });
         }
     </script>
 </body>
-</html> 
+</html>
