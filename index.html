@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,69 +9,59 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
+            margin: 20px;
             background-color: #f4f4f9;
             text-align: center;
         }
+        #dataInput {
+            width: 80%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
             padding: 20px;
             background: white;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
-        }
-        textarea {
-            width: 100%;
-            height: 80px;
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
         }
         button {
             background-color: #007bff;
             color: white;
-            padding: 12px;
+            padding: 10px;
             border: none;
             cursor: pointer;
+            margin: 10px;
             border-radius: 5px;
-            font-size: 16px;
-            transition: 0.3s;
         }
         button:hover {
             background-color: #0056b3;
         }
-        .results p {
-            font-size: 18px;
-            margin: 5px 0;
-        }
         .canvas-container {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
+            width: 600px;
+            height: 400px;
+            margin: auto;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Statistical Data Analysis Tool</h1>
-        <p>Enter numbers separated by commas (two lines for covariance & scatter plot):</p>
-        <textarea id="dataInput"></textarea>
+        <label for="dataInput">Enter Data (comma-separated, two lines for covariance & scatter plot):</label><br>
+        <textarea id="dataInput"></textarea><br>
         <button onclick="analyzeData()">Analyze Data</button>
         
-        <div class="results">
+        <div id="results">
             <h2>Results</h2>
-            <p><strong>Mean:</strong> <span id="mean"></span></p>
-            <p><strong>Median:</strong> <span id="median"></span></p>
-            <p><strong>Mode:</strong> <span id="mode"></span></p>
-            <p><strong>Min:</strong> <span id="min"></span> | <strong>Max:</strong> <span id="max"></span> | <strong>Range:</strong> <span id="range"></span></p>
-            <p><strong>Standard Deviation:</strong> <span id="stdDev"></span></p>
-            <p><strong>Variance:</strong> <span id="variance"></span></p>
-            <p><strong>Covariance:</strong> <span id="covariance"></span></p>
-            <p><strong>Pearson Correlation:</strong> <span id="correlation"></span></p>
+            <p>Mean: <span id="mean"></span></p>
+            <p>Median: <span id="median"></span></p>
+            <p>Mode: <span id="mode"></span></p>
+            <p>Min: <span id="min"></span> | Max: <span id="max"></span> | Range: <span id="range"></span></p>
+            <p>Standard Deviation: <span id="stdDev"></span></p>
+            <p>Variance: <span id="variance"></span></p>
+            <p>Covariance: <span id="covariance"></span></p>
+            <p>Pearson Correlation: <span id="correlation"></span></p>
         </div>
         
         <h2>Visualizations</h2>
@@ -113,25 +104,25 @@
         function calculateMean(data) {
             return data.reduce((sum, val) => sum + val, 0) / data.length;
         }
-        
+
         function calculateMedian(data) {
             let sorted = [...data].sort((a, b) => a - b);
             let mid = Math.floor(sorted.length / 2);
             return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
         }
-        
+
         function calculateMode(data) {
             let freq = {};
             data.forEach(num => freq[num] = (freq[num] || 0) + 1);
             let maxFreq = Math.max(...Object.values(freq));
             return Object.keys(freq).filter(num => freq[num] === maxFreq).map(Number);
         }
-        
+
         function calculateStandardDeviation(data) {
             let mean = calculateMean(data);
             return Math.sqrt(data.reduce((sum, val) => sum + (val - mean) ** 2, 0) / data.length);
         }
-        
+
         function calculateVariance(data) {
             return calculateStandardDeviation(data) ** 2;
         }
@@ -145,6 +136,35 @@
             let cov = calculateCovariance(x, y);
             return cov / (calculateStandardDeviation(x) * calculateStandardDeviation(y));
         }
+
+        function createHistogram(data, canvasId) {
+            let ctx = document.getElementById(canvasId).getContext("2d");
+            if (window.myHistogram) window.myHistogram.destroy();
+            window.myHistogram = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: [...new Set(data)].sort((a, b) => a - b),
+                    datasets: [{
+                        label: "Histogram",
+                        data: Object.values(data.reduce((freq, num) => (freq[num] = (freq[num] || 0) + 1, freq), {})),
+                        backgroundColor: "rgba(75, 192, 192, 0.6)",
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function createScatterPlot(x, y, canvasId) {
+            let ctx = document.getElementById(canvasId).getContext('2d');
+            if (window.myScatterPlot) window.myScatterPlot.destroy();
+            window.myScatterPlot = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: [{ label: 'Scatter Plot', data: x.map((xi, i) => ({ x: xi, y: y[i] })), backgroundColor: 'red' }] },
+                options: { scales: { x: { beginAtZero: false }, y: { beginAtZero: false } } }
+            });
+        }
     </script>
 </body>
-</html>
+</html> 
